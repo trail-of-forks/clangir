@@ -3018,8 +3018,16 @@ cir::FuncOp CIRGenModule::GetOrCreateCIRFunction(
 }
 
 mlir::Location CIRGenModule::getLoc(SourceLocation SLoc) {
+#ifndef PATCHE_ENABLE
   assert(SLoc.isValid() && "expected valid source location");
   const SourceManager &SM = astContext.getSourceManager();
+#else
+  const SourceManager &SM = astContext.getSourceManager();
+  if (SLoc.isInvalid()) {
+    auto main_file = SM.getMainFileID();
+    SLoc = SM.getLocForStartOfFile(main_file);
+  }
+#endif
   PresumedLoc PLoc = SM.getPresumedLoc(SLoc);
   StringRef Filename = PLoc.getFilename();
   return mlir::FileLineColLoc::get(builder.getStringAttr(Filename),
@@ -3027,7 +3035,9 @@ mlir::Location CIRGenModule::getLoc(SourceLocation SLoc) {
 }
 
 mlir::Location CIRGenModule::getLoc(SourceRange SLoc) {
+#ifndef PATCHE_ENABLE
   assert(SLoc.isValid() && "expected valid source location");
+#endif
   mlir::Location B = getLoc(SLoc.getBegin());
   mlir::Location E = getLoc(SLoc.getEnd());
   SmallVector<mlir::Location, 2> locs = {B, E};

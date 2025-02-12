@@ -45,6 +45,8 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/Value.h"
 
+#define PATCHE_ENABLE 1
+
 namespace clang::CIRGen {
 
 class CIRGenFunction;
