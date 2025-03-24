@@ -17,6 +17,7 @@
 #include "LowerModule.h"
 #include "TargetLoweringInfo.h"
 #include "clang/CIR/Target/AArch64.h"
+#include "clang/CIR/Target/ARM.h"
 #include "clang/CIR/Target/x86.h"
 
 namespace cir {
@@ -26,6 +27,9 @@ createX86_64TargetLoweringInfo(LowerModule &CGM, cir::X86AVXABILevel AVXLevel);
 
 std::unique_ptr<TargetLoweringInfo>
 createAArch64TargetLoweringInfo(LowerModule &CGM, cir::AArch64ABIKind AVXLevel);
+
+std::unique_ptr<TargetLoweringInfo>
+createARMTargetLoweringInfo(LowerModule &CGM, cir::ARMABIKind Kind);
 
 std::unique_ptr<TargetLoweringInfo>
 createSPIRVTargetLoweringInfo(LowerModule &CGM);

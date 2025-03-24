@@ -94,6 +94,7 @@ static CIRGenCXXABI *createCXXABI(CIRGenModule &CGM) {
   case TargetCXXABI::GenericItanium:
   case TargetCXXABI::GenericAArch64:
   case TargetCXXABI::AppleARM64:
+  case TargetCXXABI::GenericARM:
     return CreateCIRGenItaniumCXXABI(CGM);
   default:
     llvm_unreachable("invalid C++ ABI kind");

@@ -6,6 +6,7 @@
 
 #include "clang/Basic/TargetInfo.h"
 #include "clang/CIR/MissingFeatures.h"
+#include "clang/CIR/Target/ARM.h"
 #include "clang/CIR/Target/x86.h"
 
 using namespace clang;
@@ -145,6 +146,59 @@ class AArch64TargetCIRGenInfo : public TargetCIRGenInfo {
 public:
   AArch64TargetCIRGenInfo(CIRGenTypes &CGT, AArch64ABIInfo::ABIKind Kind)
       : TargetCIRGenInfo(std::make_unique<AArch64ABIInfo>(CGT, Kind)) {}
+};
+
+} // namespace
+
+//===----------------------------------------------------------------------===//
+// ARM ABI Implementation
+//===----------------------------------------------------------------------===//
+
+namespace {
+
+class ARMABIInfo : public ABIInfo {
+public:
+  enum ABIKind { APCS = 0, AAPCS, AAPCS_VFP, AAPCS16_VFP };
+
+private:
+  ABIKind Kind;
+
+public:
+  ARMABIInfo(CIRGenTypes &CGT, ABIKind Kind) : ABIInfo(CGT), Kind(Kind) {}
+
+private:
+  ABIKind getABIKind() const { return Kind; }
+
+  cir::ABIArgInfo classifyReturnType(QualType RetTy, bool IsVariadic) const;
+  cir::ABIArgInfo classifyArgumentType(QualType RetTy, bool IsVariadic,
+                                       unsigned CallingConvention) const;
+
+  virtual void computeInfo(CIRGenFunctionInfo &FI) const override {
+    // Top level CIR has unlimited arguments and return types. Lowering for ABI
+    // specific concerns should happen during a lowering phase. Assume
+    // everything is direct for now.
+    for (CIRGenFunctionInfo::arg_iterator it = FI.arg_begin(),
+                                          ie = FI.arg_end();
+         it != ie; ++it) {
+      if (testIfIsVoidTy(it->type))
+        it->info = cir::ABIArgInfo::getIgnore();
+      else
+        it->info = cir::ABIArgInfo::getDirect(CGT.convertType(it->type));
+    }
+    auto RetTy = FI.getReturnType();
+    if (testIfIsVoidTy(RetTy))
+      FI.getReturnInfo() = cir::ABIArgInfo::getIgnore();
+    else
+      FI.getReturnInfo() = cir::ABIArgInfo::getDirect(CGT.convertType(RetTy));
+
+    return;
+  }
+};
+
+class ARMTargetCIRGenInfo : public TargetCIRGenInfo {
+public:
+  ARMTargetCIRGenInfo(CIRGenTypes &CGT, ARMABIInfo::ABIKind Kind)
+      : TargetCIRGenInfo(std::make_unique<ARMABIInfo>(CGT, Kind)) {}
 };
 
 } // namespace
@@ -667,6 +721,14 @@ const TargetCIRGenInfo &CIRGenModule::getTargetCIRGenInfo() {
                "Only Darwin supported for aarch64");
     Kind = AArch64ABIInfo::DarwinPCS;
     return SetCIRGenInfo(new AArch64TargetCIRGenInfo(genTypes, Kind));
+  }
+
+  case llvm::Triple::arm: {
+    assert((getTarget().getABI() == "aapcs" ||
+            getTarget().getABI() == "aapcs-linux") &&
+           "Only AAPCS supported for ARM");
+    ARMABIInfo::ABIKind Kind = ARMABIInfo::AAPCS;
+    return SetCIRGenInfo(new ARMTargetCIRGenInfo(genTypes, Kind));
   }
 
   case llvm::Triple::x86_64: {

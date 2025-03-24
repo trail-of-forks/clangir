@@ -25,10 +25,12 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Support/LogicalResult.h"
 #include "clang/CIR/Target/AArch64.h"
+#include "clang/CIR/Target/ARM.h"
 #include "llvm/Support/ErrorHandling.h"
 
 using MissingFeatures = cir::MissingFeatures;
 using AArch64ABIKind = cir::AArch64ABIKind;
+using ARMABIKind = cir::ARMABIKind;
 using X86AVXABILevel = cir::X86AVXABILevel;
 
 namespace cir {
@@ -70,6 +72,11 @@ createTargetLoweringInfo(LowerModule &LM) {
       cir_cconv_unreachable("AAPCS-soft ABI NYI");
 
     return createAArch64TargetLoweringInfo(LM, Kind);
+  }
+  case llvm::Triple::arm: {
+    assert((Target.getABI() == "aapcs" || Target.getABI() == "aapcs-linux") &&
+           "Only AAPCS supported for ARM");
+    return createARMTargetLoweringInfo(LM, ARMABIKind::AAPCS);
   }
   case llvm::Triple::x86_64: {
     switch (Triple.getOS()) {

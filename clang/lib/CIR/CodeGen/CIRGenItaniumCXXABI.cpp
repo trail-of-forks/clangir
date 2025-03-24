@@ -26,6 +26,7 @@
 #include "clang/AST/Mangle.h"
 #include "clang/AST/VTableBuilder.h"
 #include "clang/Basic/Linkage.h"
+#include "clang/Basic/TargetCXXABI.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/CIR/Dialect/IR/CIRAttrs.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -429,6 +430,9 @@ CIRGenCXXABI *clang::CIRGen::CreateCIRGenItaniumCXXABI(CIRGenModule &CGM) {
   case TargetCXXABI::GenericItanium:
   case TargetCXXABI::GenericAArch64:
     return new CIRGenItaniumCXXABI(CGM);
+
+  case TargetCXXABI::GenericARM:
+    return new CIRGenARMCXXABI(CGM);
 
   case TargetCXXABI::AppleARM64:
     return new CIRGenAppleARM64CXXABI(CGM);

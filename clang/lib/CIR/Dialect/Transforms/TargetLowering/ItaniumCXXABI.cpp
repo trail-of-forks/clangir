@@ -226,6 +226,9 @@ CIRCXXABI *CreateItaniumCXXABI(LowerModule &LM) {
   // and array cookies.
   case clang::TargetCXXABI::GenericAArch64:
   case clang::TargetCXXABI::AppleARM64:
+  case clang::TargetCXXABI::GenericARM: // TODO(kumarak): ItaniumCXXABI does not
+                                        // include arm 32 bit oddities. Handle
+                                        // it later.
     // TODO: this isn't quite right, clang uses AppleARM64CXXABI which inherits
     // from ARMCXXABI. We'll have to follow suit.
     cir_cconv_assert(!cir::MissingFeatures::appleArm64CXXABI());
