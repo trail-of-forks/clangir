@@ -25,6 +25,7 @@
 #include "mlir/Support/LLVM.h"
 #include "mlir/Support/LogicalResult.h"
 
+#include "mlir/Dialect/LLVMIR/LLVMTypes.h"
 #include "clang/CIR/Interfaces/ASTAttrInterfaces.h"
 #include "clang/CIR/Interfaces/CIRFPTypeInterface.h"
 #include "llvm/ADT/APFloat.h"
@@ -391,7 +392,8 @@ llvm::TypeSize
 PointerType::getTypeSizeInBits(const ::mlir::DataLayout &dataLayout,
                                ::mlir::DataLayoutEntryListRef params) const {
   // FIXME: improve this in face of address spaces
-  return llvm::TypeSize::getFixed(64);
+  auto llvm_type = mlir::LLVM::LLVMPointerType::get(getContext(), 0);
+  return dataLayout.getTypeSizeInBits(llvm_type);
 }
 
 uint64_t

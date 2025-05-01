@@ -1142,6 +1142,8 @@ public:
 
   mlir::LogicalResult emitGotoStmt(const clang::GotoStmt &S);
 
+  mlir::LogicalResult emitIndirectGotoStmt(const clang::IndirectGotoStmt &S);
+
   mlir::LogicalResult emitLabel(const clang::LabelDecl *D);
   mlir::LogicalResult emitLabelStmt(const clang::LabelStmt &S);
 

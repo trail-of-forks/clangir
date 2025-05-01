@@ -14,6 +14,7 @@
 #include "CIRGenBuilder.h"
 #include "CIRGenFunction.h"
 #include "mlir/IR/Value.h"
+#include "mlir/Support/LLVM.h"
 #include "clang/AST/CharUnits.h"
 #include "clang/AST/Stmt.h"
 #include "clang/CIR/Dialect/IR/CIRDialect.h"
@@ -178,7 +179,9 @@ mlir::LogicalResult CIRGenFunction::emitStmt(const Stmt *S,
     return emitCXXForRangeStmt(cast<CXXForRangeStmt>(*S), Attrs);
 
   case Stmt::IndirectGotoStmtClass:
+    return emitIndirectGotoStmt(cast<IndirectGotoStmt>(*S));
   case Stmt::ReturnStmtClass:
+    return emitReturnStmt(cast<ReturnStmt>(*S));
   // When implemented, GCCAsmStmtClass should fall-through to MSAsmStmtClass.
   case Stmt::GCCAsmStmtClass:
   case Stmt::MSAsmStmtClass:
@@ -631,6 +634,23 @@ mlir::LogicalResult CIRGenFunction::emitGotoStmt(const GotoStmt &S) {
   builder.createBlock(builder.getBlock()->getParent());
 
   // What here...
+  return mlir::success();
+}
+
+mlir::LogicalResult
+CIRGenFunction::emitIndirectGotoStmt(const clang::IndirectGotoStmt &S) {
+
+  // FIXME: This is temporary implementation of indirect goto. CIR does
+  // not support indirect branch instructions.
+  auto targetVal = emitScalarExpr(S.getTarget());
+  if (auto *defOp = targetVal.getDefiningOp(); defOp) {
+    auto *block = defOp->getBlock();
+    builder.create<BrOp>(getLoc(S.getSourceRange()), block);
+    builder.createBlock(builder.getBlock()->getParent());
+  } else {
+    auto *nextBlock = builder.createBlock(builder.getBlock()->getParent());
+    builder.create<BrOp>(getLoc(S.getSourceRange()), nextBlock);
+  }
   return mlir::success();
 }
 
